@@ -226,7 +226,7 @@ def autoArtUpdate(bot):
                     bot.send_photo(chat_id=chat_id, photo=imageUrl)
         except BaseException as error:
             #bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
-            print('An exception occurred in autoupdate: {}'.format(error))
+            print('An exception occurred in autoupdate: {}'.format(error), " for " + artist_name)
 
     db = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print("Autoupdate : " + db)
