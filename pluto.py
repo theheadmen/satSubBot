@@ -76,6 +76,7 @@ dt = datetime.now()
 # commit the changes
 #conn.commit()
 
+
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
 def start(bot, update):
@@ -84,48 +85,51 @@ def start(bot, update):
     url = get_image()
     bot.send_photo(chat_id = chat_id, photo=open(url, 'rb'))
 
-def help(bot, update):
+
+def addSub(bot, update):
     cur = conn.cursor()
     chat_id = update.message.chat_id
-    messageText = update.message.text.replace("/help", "").strip()
+    messageText = update.message.text.replace("/addsub", "").strip()
     if not messageText:
-        messageText = "d3cap"
-    print(messageText)
-    non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
-    try:
-        url = 'https://www.artstation.com/users/' + messageText + '/projects.rss'
-        print(url)
-        req_headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
-        request = Request(url, headers=req_headers)
-        r = urlopen(request)
-        jsonArray = json.loads(r.read().decode("utf-8").translate(non_bmp_map))
-        jsonData = jsonArray['data']
+        update.message.reply_text('Please, add artist nickname!')
+    else:
+        #print(messageText)
+        non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
+        try:
+            url = 'https://www.artstation.com/users/' + messageText + '/projects.rss'
+            print(url)
+            req_headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+            request = Request(url, headers=req_headers)
+            r = urlopen(request)
+            jsonArray = json.loads(r.read().decode("utf-8").translate(non_bmp_map))
+            jsonData = jsonArray['data']
 
-        if len(jsonData):
-            partsOfUrl = jsonData[0]['cover']['small_square_url'].split("/")
-            imageUrl = partsOfUrl[0] + "/" + partsOfUrl[1] + "/" + partsOfUrl[2] + "/" + partsOfUrl[3] + "/" + partsOfUrl[4] + "/" + partsOfUrl[5] + "/" + partsOfUrl[6] + "/" + partsOfUrl[7] + "/" + partsOfUrl[8] + "/" + partsOfUrl[9] + "/" + "large" + "/" + partsOfUrl[-1]
-            publishData = jsonData[0]['published_at']
-            publishTime = datetime.strptime(publishData[:19],'%Y-%m-%dT%H:%M:%S')
-            SQL = "SELECT * FROM Artstation WHERE Chatname = %s AND Artistname = %s;"
-            data = (str(chat_id), messageText)
-            cur.execute(SQL, data)
-            if cur.rowcount > 0:
-                update.message.reply_text('You already have it')
+            if len(jsonData):
+                partsOfUrl = jsonData[0]['cover']['small_square_url'].split("/")
+                imageUrl = partsOfUrl[0] + "/" + partsOfUrl[1] + "/" + partsOfUrl[2] + "/" + partsOfUrl[3] + "/" + partsOfUrl[4] + "/" + partsOfUrl[5] + "/" + partsOfUrl[6] + "/" + partsOfUrl[7] + "/" + partsOfUrl[8] + "/" + partsOfUrl[9] + "/" + "large" + "/" + partsOfUrl[-1]
+                publishData = jsonData[0]['published_at']
+                publishTime = datetime.strptime(publishData[:19],'%Y-%m-%dT%H:%M:%S')
+                SQL = "SELECT * FROM Artstation WHERE Chatname = %s AND Artistname = %s;"
+                data = (str(chat_id), messageText)
+                cur.execute(SQL, data)
+                if cur.rowcount > 0:
+                    update.message.reply_text('You already have it')
+                else:
+                    SQL2 = "INSERT INTO Artstation (Chatname, Artistname, Lastdate) VALUES (%s, %s, %s);" # Note: no quotes
+                    data2 = (chat_id, messageText, publishTime)
+                    cur.execute(SQL2, data2) # Note: no % operator
+                    update.message.reply_text('Added to your list!')
+                    bot.send_photo(chat_id=chat_id, photo=imageUrl)
+
             else:
-                SQL2 = "INSERT INTO Artstation (Chatname, Artistname, Lastdate) VALUES (%s, %s, %s);" # Note: no quotes
-                data2 = (chat_id, messageText, publishTime)
-                cur.execute(SQL2, data2) # Note: no % operator
-                update.message.reply_text('Added to your list!')
-                bot.send_photo(chat_id=chat_id, photo=imageUrl)
+                update.message.reply_text("I can't take any data from artstation :(")
+        except BaseException as error:
+            print('An exception occurred in sub: {}'.format(error))
+            update.message.reply_text('Some error happen')
 
-        else:
-            update.message.reply_text('Help!')
-    except BaseException as error:
-        print('An exception occurred in help: {}'.format(error))
-        update.message.reply_text('Some error happen')
-
-    cur.close()
+        cur.close()
     conn.commit()
+
 
 def unsub(bot, update):
     try:
@@ -159,7 +163,8 @@ def unsub(bot, update):
         update.message.reply_text("Some error!")
         print('An exception occurred in unsub: {}'.format(error))
 
-def subscription(bot, update):
+
+def getAllSubs(bot, update):
     try:
         cur = conn.cursor()
         chat_id = str(update.message.chat_id)
@@ -182,7 +187,8 @@ def subscription(bot, update):
     except BaseException as error:
         update.message.reply_text("Some error!")
         print('An exception occurred in sub: {}'.format(error))
-            
+
+
 def autoArtUpdate(bot):
     cur = conn.cursor()
     cur.execute("SELECT * FROM Artstation")
@@ -227,11 +233,18 @@ def autoArtUpdate(bot):
     cur.close()
     conn.commit()
 
+
 def echo(bot, update):
     update.message.reply_text(update.message.text)
 
+
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
+
+
+def help(bot, update):
+    update.message.reply_text("Hello! You can get photo from space by /start or subcribe to artstation artists by /addsub, /unsub and others commands")
+
 
 def get_image():
     ftp = ftplib.FTP("ftp.ntsomz.ru")
@@ -289,6 +302,7 @@ def get_image():
     return("img1.png")
     #img.show() 
 
+
 def main():
     # Create the EventHandler and pass it your bot's token.
     updater = Updater(os.environ["TG_KEY"])
@@ -299,7 +313,8 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
-    dp.add_handler(CommandHandler("subs", subscription))
+    dp.add_handler(CommandHandler("addsub", addSub))
+    dp.add_handler(CommandHandler("mysubs", getAllSubs))
     dp.add_handler(CommandHandler("unsub", unsub))
 
     # on noncommand i.e message - echo the message on Telegram
@@ -311,10 +326,10 @@ def main():
     # Start the Bot
     updater.start_polling()
 
-    starttime=time.time()
+    startTime=time.time()
     while True:
         autoArtUpdate(updater.bot)
-        time.sleep(60.0 - ((time.time() - starttime) % 60.0))
+        time.sleep(60.0 - ((time.time() - startTime) % 60.0))
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
