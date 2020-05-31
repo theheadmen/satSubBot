@@ -171,9 +171,7 @@ def getAllSubs(bot, update):
         cur = conn.cursor()
         chat_id = str(update.message.chat_id)
         update.message.reply_text('Ok, its your subscriptions:')
-        SQL = "SELECT * FROM Artstation WHERE Chatname = %s"
-        data = (chat_id)
-        cur.execute(SQL, data)
+        cur.execute("SELECT * FROM Artstation WHERE Chatname = %s", [chat_id])
         resStringA = []
         result = cur.fetchall()
         for record in result:
