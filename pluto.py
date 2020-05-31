@@ -17,6 +17,7 @@ from urllib import parse
 import psycopg2
 from datetime import datetime, timezone
 import time
+import math
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
