@@ -247,6 +247,38 @@ def autoArtUpdate(bot):
     cur.close()
     conn.commit()
 
+def getAllLastWorks(bot):
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM Artstation")
+    result = cur.fetchall()
+    for record in result:
+        chat_id = record[1]
+        artist_name = record[2]
+        lastPublishDate = record[3]
+        non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
+        try:
+            url = 'https://www.artstation.com/users/' + artist_name + '/projects.rss'
+            req_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
+            request = Request(url, headers=req_headers)
+            r = urlopen(request)
+            jsonArray = json.loads(r.read().decode("utf-8").translate(non_bmp_map))
+            jsonData = jsonArray['data']
+
+            if len(jsonData):
+                partsOfUrl = jsonData[0]['cover']['small_square_url'].split("/")
+                imageUrl = partsOfUrl[0] + "/" + partsOfUrl[1] + "/" + partsOfUrl[2] + "/" + partsOfUrl[3] + "/" + partsOfUrl[4] + "/" + partsOfUrl[5] + "/" + partsOfUrl[6] + "/" + partsOfUrl[7] + "/" + partsOfUrl[8] + "/" + partsOfUrl[9] + "/" + "large" + "/" + partsOfUrl[-1]
+                #imageUrl = jsonData[0]['cover']['small_square_url'].replace("/small/", "/large/")
+                bot.send_message(chat_id=chat_id, text='Last art from ' + artist_name, parse_mode=ParseMode.HTML)
+                bot.send_photo(chat_id=chat_id, photo=imageUrl)        
+                    
+        except BaseException as error:
+            #bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
+            print('An exception occurred in getLastWorks: {}'.format(error), " for " + artist_name)
+
+    db = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print("Get last art works : " + db)
+    cur.close()
+
 
 def echo(bot, update):
     update.message.reply_text(update.message.text)
@@ -330,6 +362,7 @@ def main():
     dp.add_handler(CommandHandler("addsub", addSub))
     dp.add_handler(CommandHandler("mysubs", getAllSubs))
     dp.add_handler(CommandHandler("unsub", unsub))
+    dp.add_handler(CommandHandler("alllastworks", getAllLastWorks))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, echo))
