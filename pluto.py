@@ -171,15 +171,15 @@ def getAllSubs(bot, update):
         cur = conn.cursor()
         chat_id = str(update.message.chat_id)
         update.message.reply_text('Ok, its your subscriptions:')
-        cur.execute("SELECT * FROM Artstation")
+        SQL = "SELECT * FROM Artstation WHERE Chatname = %s"
+        data = (chat_id)
+        cur.execute(SQL, data)
         resStringA = []
         result = cur.fetchall()
         for record in result:
-            rec_chat_id = str(record[1])
             artist_name = record[2]
-            if rec_chat_id == chat_id:
-                linkToArtist = '<a href="https://www.artstation.com/' + artist_name + '">' + artist_name + '</a>'
-                resStringA.append(linkToArtist)
+            linkToArtist = '<a href="https://www.artstation.com/' + artist_name + '">' + artist_name + '</a>'
+            resStringA.append(linkToArtist)
 
         if len(resStringA):
             resLen = len(resStringA)
