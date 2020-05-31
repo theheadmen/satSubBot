@@ -180,7 +180,7 @@ def getAllSubs(bot, update):
                 linkToArtist = '<a href="https://www.artstation.com/' + artist_name + '">' + artist_name + '</a>'
                 resStringA.append(linkToArtist)
 
-        if len(resString):
+        if len(resStringA):
             resLen = len(resStringA)
             if (resLen > 50):
                 #in other cases not all links will works
