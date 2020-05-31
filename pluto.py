@@ -186,10 +186,10 @@ def getAllSubs(bot, update):
                 #in other cases not all links will works
                 firstHalfA = math.ceil(resLen - resLen / 2)
                 secondHalfA = -1 * (resLen - firstHalfA)
-                bot.send_message(chat_id=chat_id, text=', '.join(resString[:firstHalfA]), parse_mode=ParseMode.HTML)
-                bot.send_message(chat_id=chat_id, text=', '.join(resString[secondHalfA:]), parse_mode=ParseMode.HTML)
+                bot.send_message(chat_id=chat_id, text=', '.join(resStringA[:firstHalfA]), parse_mode=ParseMode.HTML)
+                bot.send_message(chat_id=chat_id, text=', '.join(resStringA[secondHalfA:]), parse_mode=ParseMode.HTML)
             else:
-                bot.send_message(chat_id=chat_id, text=', '.join(resString), parse_mode=ParseMode.HTML)
+                bot.send_message(chat_id=chat_id, text=', '.join(resStringA), parse_mode=ParseMode.HTML)
         else:
             update.message.reply_text('Nothing')
             
