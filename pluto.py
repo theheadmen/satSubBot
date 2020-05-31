@@ -171,17 +171,25 @@ def getAllSubs(bot, update):
         chat_id = str(update.message.chat_id)
         update.message.reply_text('Ok, its your subscriptions:')
         cur.execute("SELECT * FROM Artstation")
-        resString = []
+        resStringA = []
         result = cur.fetchall()
         for record in result:
             rec_chat_id = str(record[1])
             artist_name = record[2]
             if rec_chat_id == chat_id:
                 linkToArtist = '<a href="https://www.artstation.com/' + artist_name + '">' + artist_name + '</a>'
-                resString.append(", " + linkToArtist)
+                resStringA.append(linkToArtist)
 
         if len(resString):
-            bot.send_message(chat_id=chat_id, text=''.join(resString)[2:], parse_mode=ParseMode.HTML)
+            resLen = len(resStringA)
+            if (resLen > 50):
+                #in other cases not all links will works
+                firstHalfA = math.ceil(resLen - resLen / 2)
+                secondHalfA = -1 * (resLen - firstHalfA)
+                bot.send_message(chat_id=chat_id, text=', '.join(resString[:firstHalfA]), parse_mode=ParseMode.HTML)
+                bot.send_message(chat_id=chat_id, text=', '.join(resString[secondHalfA:]), parse_mode=ParseMode.HTML)
+            else:
+                bot.send_message(chat_id=chat_id, text=', '.join(resString), parse_mode=ParseMode.HTML)
         else:
             update.message.reply_text('Nothing')
             
