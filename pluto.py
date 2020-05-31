@@ -4,6 +4,7 @@ from urllib.request import Request, urlopen
 from io import BytesIO
 from PIL import Image
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import ParseMode
 import logging
 import datetime
 from lxml import html
@@ -210,6 +211,9 @@ def autoArtUpdate(bot):
                 partsOfUrl = jsonData[0]['cover']['small_square_url'].split("/")
                 imageUrl = partsOfUrl[0] + "/" + partsOfUrl[1] + "/" + partsOfUrl[2] + "/" + partsOfUrl[3] + "/" + partsOfUrl[4] + "/" + partsOfUrl[5] + "/" + partsOfUrl[6] + "/" + partsOfUrl[7] + "/" + partsOfUrl[8] + "/" + partsOfUrl[9] + "/" + "large" + "/" + partsOfUrl[-1]
                 #imageUrl = jsonData[0]['cover']['small_square_url'].replace("/small/", "/large/")
+                permaLink = jsonData[0]['permalink']
+                assetsCount = jsonData[0]['assets_count']
+                additionalLink = str(assetsCount) + ' arts, <a href="' + permaLink + '">link</a>'
                 publishData = jsonData[0]['published_at']
                 currentPublishDate = datetime.strptime(publishData[:19],'%Y-%m-%dT%H:%M:%S')
                 if currentPublishDate > lastPublishDate:
@@ -222,7 +226,7 @@ def autoArtUpdate(bot):
                         #bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
                         print('An exception occurred: {}'.format(error))
                         
-                    bot.send_message(chat_id=chat_id, text='New art from ' + artist_name)
+                    bot.send_message(chat_id=chat_id, text='New art from ' + artist_name + ' (' + additionalLink + ')', parse_mode=ParseMode.HTML)
                     bot.send_photo(chat_id=chat_id, photo=imageUrl)
         except BaseException as error:
             #bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
