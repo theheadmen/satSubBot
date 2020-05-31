@@ -177,10 +177,11 @@ def getAllSubs(bot, update):
             rec_chat_id = str(record[1])
             artist_name = record[2]
             if rec_chat_id == chat_id:
-                resString.append(", " + artist_name)
+                linkToArtist = '<a href="https://www.artstation.com/' + artist_name + '">' + artist_name + '</a>'
+                resString.append(", " + linkToArtist)
 
         if len(resString):
-            update.message.reply_text(''.join(resString)[2:])
+            bot.send_message(chat_id=chat_id, text=''.join(resString)[2:], parse_mode=ParseMode.HTML)
         else:
             update.message.reply_text('Nothing')
             
