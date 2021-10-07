@@ -3,8 +3,8 @@ import urllib.request
 from urllib.request import Request, urlopen
 from io import BytesIO
 from PIL import Image
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from telegram import ParseMode
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram import Update, ForceReply, ParseMode
 import logging
 import datetime
 from lxml import html
@@ -37,7 +37,7 @@ conn = psycopg2.connect(
 )
 
 dt = datetime.now()
-    
+
 #cur = conn.cursor()
 # create table one by one
 #cur.execute("DROP TABLE Artstation")
@@ -81,14 +81,14 @@ dt = datetime.now()
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
-def start(bot, update):
+def start(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     update.message.reply_text('Start getting last photo from space...!')
     url = get_image()
-    bot.send_photo(chat_id = chat_id, photo=open(url, 'rb'))
+    context.bot.send_photo(chat_id = chat_id, photo=open(url, 'rb'))
 
 
-def addSub(bot, update):
+def addSub(update: Update, context: CallbackContext):
     cur = conn.cursor()
     chat_id = update.message.chat_id
     messageText = update.message.text.replace("/addsub", "").strip()
@@ -121,7 +121,7 @@ def addSub(bot, update):
                     data2 = (chat_id, messageText, publishTime)
                     cur.execute(SQL2, data2) # Note: no % operator
                     update.message.reply_text('Added to your list!')
-                    bot.send_photo(chat_id=chat_id, photo=imageUrl)
+                    context.bot.send_photo(chat_id=chat_id, photo=imageUrl)
 
             else:
                 update.message.reply_text("I can't take any data from artstation :(")
@@ -133,7 +133,7 @@ def addSub(bot, update):
     conn.commit()
 
 
-def unsub(bot, update):
+def unsub(update: Update, context: CallbackContext):
     try:
         cur = conn.cursor()
         messageText = update.message.text.replace("/unsub", "").strip()
@@ -158,15 +158,15 @@ def unsub(bot, update):
                 update.message.reply_text("You successfully unsubscribed")
             else:
                 update.message.reply_text('You are not subscribed to this artist')
-                
+
             cur.close()
-        
+
     except BaseException as error:
         update.message.reply_text("Some error!")
         print('An exception occurred in unsub: {}'.format(error))
 
 
-def getAllSubs(bot, update):
+def getAllSubs(update: Update, context: CallbackContext):
     try:
         cur = conn.cursor()
         chat_id = str(update.message.chat_id)
@@ -185,13 +185,13 @@ def getAllSubs(bot, update):
                 #in other cases not all links will works
                 firstHalfA = math.ceil(resLen - resLen / 2)
                 secondHalfA = -1 * (resLen - firstHalfA)
-                bot.send_message(chat_id=chat_id, text=', '.join(resStringA[:firstHalfA]), parse_mode=ParseMode.HTML)
-                bot.send_message(chat_id=chat_id, text=', '.join(resStringA[secondHalfA:]), parse_mode=ParseMode.HTML)
+                context.bot.send_message(chat_id=chat_id, text=', '.join(resStringA[:firstHalfA]), parse_mode=ParseMode.HTML)
+                context.bot.send_message(chat_id=chat_id, text=', '.join(resStringA[secondHalfA:]), parse_mode=ParseMode.HTML)
             else:
-                bot.send_message(chat_id=chat_id, text=', '.join(resStringA), parse_mode=ParseMode.HTML)
+                context.bot.send_message(chat_id=chat_id, text=', '.join(resStringA), parse_mode=ParseMode.HTML)
         else:
             update.message.reply_text('Nothing')
-            
+
         cur.close()
     except BaseException as error:
         update.message.reply_text("Some error!")
@@ -231,13 +231,13 @@ def autoArtUpdate(bot):
                         cur.execute(SQL, data)
                         conn.commit()
                     except psycopg2.ProgrammingError as error:
-                        #bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
+                        #context.bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
                         print('An exception occurred: {}'.format(error))
-                        
-                    bot.send_message(chat_id=chat_id, text='New art from ' + artist_name + ' (' + additionalLink + ')', parse_mode=ParseMode.HTML)
-                    bot.send_photo(chat_id=chat_id, photo=imageUrl)
+
+                    context.bot.send_message(chat_id=chat_id, text='New art from ' + artist_name + ' (' + additionalLink + ')', parse_mode=ParseMode.HTML)
+                    context.bot.send_photo(chat_id=chat_id, photo=imageUrl)
         except BaseException as error:
-            #bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
+            #context.bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
             print('An exception occurred in autoupdate: {}'.format(error), " for " + artist_name)
 
     db = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -245,7 +245,7 @@ def autoArtUpdate(bot):
     cur.close()
     conn.commit()
 
-def getAllLastWorks(bot, update):
+def getAllLastWorks(update: Update, context: CallbackContext):
     user_chat_id = str(update.message.chat_id)
     try:
         cur = conn.cursor()
@@ -268,26 +268,26 @@ def getAllLastWorks(bot, update):
                     partsOfUrl = jsonData[0]['cover']['small_square_url'].split("/")
                     imageUrl = partsOfUrl[0] + "/" + partsOfUrl[1] + "/" + partsOfUrl[2] + "/" + partsOfUrl[3] + "/" + partsOfUrl[4] + "/" + partsOfUrl[5] + "/" + partsOfUrl[6] + "/" + partsOfUrl[7] + "/" + partsOfUrl[8] + "/" + partsOfUrl[9] + "/" + "large" + "/" + partsOfUrl[-1]
                     #imageUrl = jsonData[0]['cover']['small_square_url'].replace("/small/", "/large/")
-                    bot.send_message(chat_id=chat_id, text='Last art from ' + artist_name, parse_mode=ParseMode.HTML)
-                    bot.send_photo(chat_id=chat_id, photo=imageUrl)      
+                    context.bot.send_message(chat_id=chat_id, text='Last art from ' + artist_name, parse_mode=ParseMode.HTML)
+                    context.bot.send_photo(chat_id=chat_id, photo=imageUrl)
 
         db = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print("Get last art works : " + db)
         cur.close()
-               
+
     except BaseException as error:
-        bot.send_message(chat_id=chat_id, text='Some error in getLastWorks')
+        context.bot.send_message(chat_id=chat_id, text='Some error in getLastWorks')
         print('An exception occurred in getLastWorks: {}'.format(error))
 
-def echo(bot, update):
+def echo(update: Update, context: CallbackContext):
     update.message.reply_text(update.message.text)
 
 
-def error(bot, update, error):
+def error(update: Update, context: CallbackContext, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
 
 
-def help(bot, update):
+def help(update: Update, context: CallbackContext):
     update.message.reply_text("Hello! You can get photo from space by /start or subcribe to artstation artists by /addsub, /unsub and others commands")
 
 
@@ -336,16 +336,16 @@ def get_image():
             file = text
     print(file.rsplit(' ',1)[1])
     filePath = file.rsplit(' ',1)[1]
-    imagePath = "ftp://electro:electro@ftp.ntsomz.ru/ELECTRO_L_2/" + year + "/" + month + "/" + day + "/" + time + "/" + filePath  
+    imagePath = "ftp://electro:electro@ftp.ntsomz.ru/ELECTRO_L_2/" + year + "/" + month + "/" + day + "/" + time + "/" + filePath
     #print(imagePath)
     c = ""
     with urllib.request.urlopen(imagePath) as url:
         c = BytesIO(url.read())
-    
+
     img = Image.open(c)
     img.save("img1.png","PNG")
     return("img1.png")
-    #img.show() 
+    #img.show()
 
 
 def main():
