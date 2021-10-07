@@ -354,7 +354,7 @@ def checkUpdate(update: Update, context: CallbackContext):
         jsonData = jsonArray['data']
         context.bot.send_message(chat_id=chat_id, text="Good update for " + artist_name)
     except BaseException as error:
-        context.bot.send_message(chat_id=chat_id, text='An exception occurred in update: {}'.format(error), " for " + artist_name)
+        context.bot.send_message(chat_id=chat_id, text='An exception occurred in update: {}'.format(error) + " for " + artist_name)
 
 def main():
     # Create the EventHandler and pass it your bot's token.
