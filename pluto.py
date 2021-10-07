@@ -207,7 +207,7 @@ def getAllSubs(update: Update, context: CallbackContext):
         update.message.reply_text("Some error!")
         print('An exception occurred in sub: {}'.format(error))
 
-def autoArtUpdate(bot):
+def autoArtUpdate(context):
     cur = conn.cursor()
     cur.execute("SELECT * FROM Artstation")
     result = cur.fetchall()
@@ -242,8 +242,8 @@ def autoArtUpdate(bot):
                         #context.bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
                         print('An exception occurred: {}'.format(error))
 
-                    bot.send_message(chat_id=chat_id, text='New art from ' + artist_name + ' (' + additionalLink + ')', parse_mode=ParseMode.HTML)
-                    bot.send_photo(chat_id=chat_id, photo=imageUrl)
+                    context.bot.send_message(chat_id=chat_id, text='New art from ' + artist_name + ' (' + additionalLink + ')', parse_mode=ParseMode.HTML)
+                    context.bot.send_photo(chat_id=chat_id, photo=imageUrl)
         except BaseException as error:
             #context.bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
             print('An exception occurred in autoupdate: {}'.format(error), " for " + artist_name)
@@ -371,6 +371,8 @@ def main():
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
+    # job queie
+    jq = updater.job_queue
 
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
@@ -390,10 +392,7 @@ def main():
     # Start the Bot
     updater.start_polling()
 
-    startTime=time.time()
-    while True:
-        autoArtUpdate(updater.bot)
-        time.sleep(60.0 - ((time.time() - startTime) % 60.0))
+    job_minute = jq.run_repeating(autoArtUpdate, interval=60, first=10)
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
