@@ -19,6 +19,11 @@ from datetime import datetime, timezone
 import time
 import math
 
+req_headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36',
+    'cookie': '_ga=GA1.2.1146101954.1576593972; _ym_uid=1587041423720294521; __stripe_mid=b8929ada-b111-471d-a56a-e3d9b12896269598c0; visitor-uuid=301da191-0ef7-4557-b3fa-5fa25dcb51bc; _ym_d=1618831509; __ssid=42ae56fbe3596e73aff1de4a37df595; G_ENABLED_IDPS=google; _hjid=e6ff7867-679d-4199-b341-f536250fdc69; g_state={"i_l":0}; _gaexp=GAX1.2.rlph7YG9Qt6rthTVdp71mw.18956.2; ArtStationSessionCookie=ImU5MGE0OGE1LWNhYTUtNGFjYS1iYjBmLWM4OGI1NmFmMTNlMiI%3D--43486307112f8c0aa4b47b5ce233f4519a8c732998248daf04d615f69af7b9e2; referrer-host=away.vk.com; country_code=RU; continent_code=EU; _ArtStation_session=Smd5cHJqODZOTVhwQUxtaWxwTXU2cWQ4RFZGLytUVGFsUHpwcWpOM0JpYVN2dkZKL3pPbWptaCtSV01FOGRORy9hWFljQ09OOSswcTBJRWJtUU1RZVE9PS0tYjhyR1ppQXVIUVI0Um1YUXNtMzFTZz09--3a2939cab527462c6070f0f86028d010d27dfb3d; __cf_bm=Ga9UuMaHQ66x1YJVz2V2GZVrJ4TV4lR4O2PIf72gaGc-1633619937-0-AVfzr05Qpea76cK61zaK8FFgDmeauzD9qpkOE/I097/xfppCq4Tu/mI1NagMciwwbvLa4q1qDShJ8DsN702vUv5Bw/LSxMZBUYGBIJc0hAzU'
+}
+
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -87,7 +92,6 @@ def start(update: Update, context: CallbackContext):
     url = get_image()
     context.bot.send_photo(chat_id = chat_id, photo=open(url, 'rb'))
 
-
 def addSub(update: Update, context: CallbackContext):
     cur = conn.cursor()
     chat_id = update.message.chat_id
@@ -100,7 +104,6 @@ def addSub(update: Update, context: CallbackContext):
         try:
             url = 'https://www.artstation.com/users/' + messageText + '/projects.rss'
             print(url)
-            req_headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
             request = Request(url, headers=req_headers)
             r = urlopen(request)
             jsonArray = json.loads(r.read().decode("utf-8").translate(non_bmp_map))
@@ -131,7 +134,6 @@ def addSub(update: Update, context: CallbackContext):
 
         cur.close()
     conn.commit()
-
 
 def unsub(update: Update, context: CallbackContext):
     try:
@@ -165,7 +167,6 @@ def unsub(update: Update, context: CallbackContext):
         update.message.reply_text("Some error!")
         print('An exception occurred in unsub: {}'.format(error))
 
-
 def getAllSubs(update: Update, context: CallbackContext):
     try:
         cur = conn.cursor()
@@ -197,7 +198,6 @@ def getAllSubs(update: Update, context: CallbackContext):
         update.message.reply_text("Some error!")
         print('An exception occurred in sub: {}'.format(error))
 
-
 def autoArtUpdate(bot):
     cur = conn.cursor()
     cur.execute("SELECT * FROM Artstation")
@@ -209,7 +209,6 @@ def autoArtUpdate(bot):
         non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
         try:
             url = 'https://www.artstation.com/users/' + artist_name + '/projects.rss'
-            req_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
             request = Request(url, headers=req_headers)
             r = urlopen(request)
             jsonArray = json.loads(r.read().decode("utf-8").translate(non_bmp_map))
@@ -258,7 +257,6 @@ def getAllLastWorks(update: Update, context: CallbackContext):
                 lastPublishDate = record[3]
                 non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
                 url = 'https://www.artstation.com/users/' + artist_name + '/projects.rss'
-                req_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
                 request = Request(url, headers=req_headers)
                 r = urlopen(request)
                 jsonArray = json.loads(r.read().decode("utf-8").translate(non_bmp_map))
@@ -282,14 +280,11 @@ def getAllLastWorks(update: Update, context: CallbackContext):
 def echo(update: Update, context: CallbackContext):
     update.message.reply_text(update.message.text)
 
-
 def error(update: Update, context: CallbackContext, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
 
-
 def help(update: Update, context: CallbackContext):
     update.message.reply_text("Hello! You can get photo from space by /start or subcribe to artstation artists by /addsub, /unsub and others commands")
-
 
 def get_image():
     ftp = ftplib.FTP("ftp.ntsomz.ru")
@@ -347,6 +342,19 @@ def get_image():
     return("img1.png")
     #img.show()
 
+def checkUpdate(update: Update, context: CallbackContext):
+    chat_id = update.message.chat_id
+    artist_name = 'jiangyuan'
+    non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
+    try:
+        url = 'https://www.artstation.com/users/' + artist_name + '/projects.rss'
+        request = Request(url, headers=req_headers)
+        r = urlopen(request)
+        jsonArray = json.loads(r.read().decode("utf-8").translate(non_bmp_map))
+        jsonData = jsonArray['data']
+        context.bot.send_message(chat_id=chat_id, text="Good update for " + artist_name)
+    except BaseException as error:
+        context.bot.send_message(chat_id=chat_id, text='An exception occurred in update: {}'.format(error), " for " + artist_name)
 
 def main():
     # Create the EventHandler and pass it your bot's token.
@@ -362,6 +370,7 @@ def main():
     dp.add_handler(CommandHandler("mysubs", getAllSubs))
     dp.add_handler(CommandHandler("unsub", unsub))
     dp.add_handler(CommandHandler("alllastworks", getAllLastWorks))
+    dp.add_handler(CommandHandler("checkupdate", checkUpdate))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, echo))
