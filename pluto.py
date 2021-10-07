@@ -242,8 +242,8 @@ def autoArtUpdate(bot):
                         #context.bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
                         print('An exception occurred: {}'.format(error))
 
-                    context.bot.send_message(chat_id=chat_id, text='New art from ' + artist_name + ' (' + additionalLink + ')', parse_mode=ParseMode.HTML)
-                    context.bot.send_photo(chat_id=chat_id, photo=imageUrl)
+                    bot.send_message(chat_id=chat_id, text='New art from ' + artist_name + ' (' + additionalLink + ')', parse_mode=ParseMode.HTML)
+                    bot.send_photo(chat_id=chat_id, photo=imageUrl)
         except BaseException as error:
             #context.bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
             print('An exception occurred in autoupdate: {}'.format(error), " for " + artist_name)
