@@ -20,8 +20,17 @@ import time
 import math
 
 req_headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36',
-    'cookie': '_ga=GA1.2.1146101954.1576593972; _ym_uid=1587041423720294521; __stripe_mid=b8929ada-b111-471d-a56a-e3d9b12896269598c0; visitor-uuid=301da191-0ef7-4557-b3fa-5fa25dcb51bc; _ym_d=1618831509; __ssid=42ae56fbe3596e73aff1de4a37df595; G_ENABLED_IDPS=google; _hjid=e6ff7867-679d-4199-b341-f536250fdc69; g_state={"i_l":0}; _gaexp=GAX1.2.rlph7YG9Qt6rthTVdp71mw.18956.2; ArtStationSessionCookie=ImU5MGE0OGE1LWNhYTUtNGFjYS1iYjBmLWM4OGI1NmFmMTNlMiI%3D--43486307112f8c0aa4b47b5ce233f4519a8c732998248daf04d615f69af7b9e2; referrer-host=away.vk.com; country_code=RU; continent_code=EU; _ArtStation_session=Smd5cHJqODZOTVhwQUxtaWxwTXU2cWQ4RFZGLytUVGFsUHpwcWpOM0JpYVN2dkZKL3pPbWptaCtSV01FOGRORy9hWFljQ09OOSswcTBJRWJtUU1RZVE9PS0tYjhyR1ppQXVIUVI0Um1YUXNtMzFTZz09--3a2939cab527462c6070f0f86028d010d27dfb3d; __cf_bm=Ga9UuMaHQ66x1YJVz2V2GZVrJ4TV4lR4O2PIf72gaGc-1633619937-0-AVfzr05Qpea76cK61zaK8FFgDmeauzD9qpkOE/I097/xfppCq4Tu/mI1NagMciwwbvLa4q1qDShJ8DsN702vUv5Bw/LSxMZBUYGBIJc0hAzU'
+    'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+    'accept-encoding':'utf-8',
+    'accept-language':'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+    'cache-control':'no-cache',
+    'dnt': '1',
+    'pragma': 'no-cache',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-site': 'none',
+    'sec-fetch-user': '?1',
+    'upgrade-insecure-requests': '1',
+    'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36'
 }
 
 # Enable logging
