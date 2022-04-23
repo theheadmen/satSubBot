@@ -219,7 +219,7 @@ def autoArtUpdate(context):
             records = cur.fetchall()
             cur.close()
             conn.commit()
-            print("Get all records for autoupdate with Length: {0}".format(len(result)))
+            print("Get all records for autoupdate with Length: {0}".format(len(records)))
             time.sleep(10 - time.time() % 10)
         else:
             print("Have {0} records for autoupdate".format(len(records)))
