@@ -208,60 +208,62 @@ def getAllSubs(update: Update, context: CallbackContext):
         print('An exception occurred in sub: {}'.format(error))
 
 def autoArtUpdateCallback(context):
-    autoArtUpdate(context, [])
+    autoArtUpdate(context)
 
-def autoArtUpdate(context, records):
-    cur = conn.cursor()
-    if not records:
-        cur.execute("SELECT * FROM Artstation")
-        result = cur.fetchall()
-        cur.close()
-        conn.commit()
-        print("Get all records for autoupdate with Length: {0}".format(len(result)))
-        autoArtUpdate(context, result)
-    else:
-        print("Have {0} records for autoupdate".format(len(records)))
-        record = records[0]
-        chat_id = record[1]
-        artist_name = record[2]
-        lastPublishDate = record[3]
-        non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
-        try:
-            url = 'https://www.artstation.com/users/' + artist_name + '/projects.rss'
-            request = Request(url, headers=req_headers)
-            r = urlopen(request)
-            jsonArray = json.loads(r.read().decode("utf-8").translate(non_bmp_map))
-            jsonData = jsonArray['data']
+def autoArtUpdate(context):
+    records = []
+    while True:
+        cur = conn.cursor()
+        if not records:
+            cur.execute("SELECT * FROM Artstation")
+            records = cur.fetchall()
+            cur.close()
+            conn.commit()
+            print("Get all records for autoupdate with Length: {0}".format(len(result)))
+            time.sleep(10 - time.time() % 10)
+        else:
+            print("Have {0} records for autoupdate".format(len(records)))
+            record = records[0]
+            chat_id = record[1]
+            artist_name = record[2]
+            lastPublishDate = record[3]
+            non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
+            try:
+                url = 'https://www.artstation.com/users/' + artist_name + '/projects.rss'
+                request = Request(url, headers=req_headers)
+                r = urlopen(request)
+                jsonArray = json.loads(r.read().decode("utf-8").translate(non_bmp_map))
+                jsonData = jsonArray['data']
 
-            if len(jsonData):
-                partsOfUrl = jsonData[0]['cover']['small_square_url'].split("/")
-                imageUrl = partsOfUrl[0] + "/" + partsOfUrl[1] + "/" + partsOfUrl[2] + "/" + partsOfUrl[3] + "/" + partsOfUrl[4] + "/" + partsOfUrl[5] + "/" + partsOfUrl[6] + "/" + partsOfUrl[7] + "/" + partsOfUrl[8] + "/" + partsOfUrl[9] + "/" + "large" + "/" + partsOfUrl[-1]
-                #imageUrl = jsonData[0]['cover']['small_square_url'].replace("/small/", "/large/")
-                permaLink = jsonData[0]['permalink']
-                assetsCount = jsonData[0]['assets_count']
-                additionalLink = str(assetsCount) + ' arts, <a href="' + permaLink + '">link</a>'
-                publishData = jsonData[0]['published_at']
-                currentPublishDate = datetime.strptime(publishData[:19],'%Y-%m-%dT%H:%M:%S')
-                if currentPublishDate > lastPublishDate:
-                    try:
-                        SQL = "UPDATE Artstation SET Lastdate = %s WHERE Artistname = %s;"
-                        data = (currentPublishDate, artist_name)
-                        cur.execute(SQL, data)
-                        conn.commit()
-                    except psycopg2.ProgrammingError as error:
-                        #context.bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
-                        print('An exception occurred: {}'.format(error))
+                if len(jsonData):
+                    partsOfUrl = jsonData[0]['cover']['small_square_url'].split("/")
+                    imageUrl = partsOfUrl[0] + "/" + partsOfUrl[1] + "/" + partsOfUrl[2] + "/" + partsOfUrl[3] + "/" + partsOfUrl[4] + "/" + partsOfUrl[5] + "/" + partsOfUrl[6] + "/" + partsOfUrl[7] + "/" + partsOfUrl[8] + "/" + partsOfUrl[9] + "/" + "large" + "/" + partsOfUrl[-1]
+                    #imageUrl = jsonData[0]['cover']['small_square_url'].replace("/small/", "/large/")
+                    permaLink = jsonData[0]['permalink']
+                    assetsCount = jsonData[0]['assets_count']
+                    additionalLink = str(assetsCount) + ' arts, <a href="' + permaLink + '">link</a>'
+                    publishData = jsonData[0]['published_at']
+                    currentPublishDate = datetime.strptime(publishData[:19],'%Y-%m-%dT%H:%M:%S')
+                    if currentPublishDate > lastPublishDate:
+                        try:
+                            SQL = "UPDATE Artstation SET Lastdate = %s WHERE Artistname = %s;"
+                            data = (currentPublishDate, artist_name)
+                            cur.execute(SQL, data)
+                            conn.commit()
+                        except psycopg2.ProgrammingError as error:
+                            #context.bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
+                            print('An exception occurred: {}'.format(error))
 
-                    context.bot.send_message(chat_id=chat_id, text='New art from ' + artist_name + ' (' + additionalLink + ')', parse_mode=ParseMode.HTML)
-                    context.bot.send_photo(chat_id=chat_id, photo=imageUrl)
-        except BaseException as error:
-            #context.bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
-            print('An exception occurred in autoupdate: {}'.format(error), " for " + artist_name)
+                        context.bot.send_message(chat_id=chat_id, text='New art from ' + artist_name + ' (' + additionalLink + ')', parse_mode=ParseMode.HTML)
+                        context.bot.send_photo(chat_id=chat_id, photo=imageUrl)
+            except BaseException as error:
+                #context.bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
+                print('An exception occurred in autoupdate: {}'.format(error), " for " + artist_name)
 
-        cur.close()
-        conn.commit()
-        time.sleep(20 - time.time() % 20)
-        autoArtUpdate(context, records[1:])
+            cur.close()
+            conn.commit()
+            records = records[1:]
+            time.sleep(10 - time.time() % 10)
 
 def getAllLastWorks(update: Update, context: CallbackContext):
     user_chat_id = str(update.message.chat_id)
