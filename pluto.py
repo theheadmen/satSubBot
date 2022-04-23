@@ -207,11 +207,21 @@ def getAllSubs(update: Update, context: CallbackContext):
         update.message.reply_text("Some error!")
         print('An exception occurred in sub: {}'.format(error))
 
-def autoArtUpdate(context):
+def autoArtUpdateCallback(context):
+    autoArtUpdate(context, [])
+
+def autoArtUpdate(context, records):
     cur = conn.cursor()
-    cur.execute("SELECT * FROM Artstation")
-    result = cur.fetchall()
-    for record in result:
+    if not records:
+        cur.execute("SELECT * FROM Artstation")
+        result = cur.fetchall()
+        cur.close()
+        conn.commit()
+        print("Get all records for autoupdate with Length: {0}".format(len(result)))
+        autoArtUpdate(context, result)
+    else:
+        print("Have {0} records for autoupdate".format(len(records)))
+        record = records[0]
         chat_id = record[1]
         artist_name = record[2]
         lastPublishDate = record[3]
@@ -248,10 +258,10 @@ def autoArtUpdate(context):
             #context.bot.send_message(chat_id=chat_id, text='Some error in autoupdate')
             print('An exception occurred in autoupdate: {}'.format(error), " for " + artist_name)
 
-    db = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print("Autoupdate : " + db)
-    cur.close()
-    conn.commit()
+        cur.close()
+        conn.commit()
+        time.sleep(20 - time.time() % 20)
+        autoArtUpdate(context, records[1:])
 
 def getAllLastWorks(update: Update, context: CallbackContext):
     user_chat_id = str(update.message.chat_id)
@@ -371,7 +381,7 @@ def main():
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
-    # job queie
+    # job queue
     jq = updater.job_queue
 
     # on different commands - answer in Telegram
@@ -392,7 +402,7 @@ def main():
     # Start the Bot
     updater.start_polling()
 
-    job_minute = jq.run_repeating(autoArtUpdate, interval=60, first=10)
+    job_minute = jq.run_once(autoArtUpdateCallback, when=10)
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
