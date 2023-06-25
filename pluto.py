@@ -52,10 +52,10 @@ conn = psycopg2.connect(
 
 dt = datetime.now()
 
-#cur = conn.cursor()
+cur = conn.cursor()
 # create table one by one
-#cur.execute("DROP TABLE Artstation")
-#cur.execute("CREATE TABLE Artstation(Id SERIAL PRIMARY KEY, Chatname VARCHAR(30), Artistname VARCHAR(30), Lastdate TIMESTAMP)")
+cur.execute("DROP TABLE Artstation")
+cur.execute("CREATE TABLE Artstation(Id SERIAL PRIMARY KEY, Chatname VARCHAR(30), Artistname VARCHAR(30), Lastdate TIMESTAMP)")
 
 #FOR ADD SOMETHING NEW
 #SQL = "INSERT INTO Artstation (Chatname, Artistname, Lastdate) VALUES (%s, %s, %s);" # Note: no quotes
@@ -88,9 +88,9 @@ dt = datetime.now()
 #cur.execute(SQL2, data3)
 
 # close communication with the PostgreSQL database server
-#cur.close()
+cur.close()
 # commit the changes
-#conn.commit()
+conn.commit()
 
 
 # Define a few command handlers. These usually take the two arguments bot and
@@ -104,42 +104,43 @@ def start(update: Update, context: CallbackContext):
 def addSub(update: Update, context: CallbackContext):
     cur = conn.cursor()
     chat_id = update.message.chat_id
-    messageText = update.message.text.replace("/addsub", "").strip()
-    if not messageText:
+    messageUndividedText = update.message.text.replace("/addsub", "").strip()
+    if not messageUndividedText:
         update.message.reply_text('Please, add artist nickname!')
     else:
-        #print(messageText)
+        messageTexts = messageUndividedText.split(", ")
         non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
-        try:
-            url = 'https://www.artstation.com/users/' + messageText + '/projects.rss'
-            print(url)
-            request = Request(url, headers=req_headers)
-            r = urlopen(request)
-            jsonArray = json.loads(r.read().decode("utf-8").translate(non_bmp_map))
-            jsonData = jsonArray['data']
+        for messageText in messageTexts:
+            try:
+                url = 'https://www.artstation.com/users/' + messageText + '/projects.rss'
+                print(url)
+                request = Request(url, headers=req_headers)
+                r = urlopen(request)
+                jsonArray = json.loads(r.read().decode("utf-8").translate(non_bmp_map))
+                jsonData = jsonArray['data']
 
-            if len(jsonData):
-                partsOfUrl = jsonData[0]['cover']['small_square_url'].split("/")
-                imageUrl = partsOfUrl[0] + "/" + partsOfUrl[1] + "/" + partsOfUrl[2] + "/" + partsOfUrl[3] + "/" + partsOfUrl[4] + "/" + partsOfUrl[5] + "/" + partsOfUrl[6] + "/" + partsOfUrl[7] + "/" + partsOfUrl[8] + "/" + partsOfUrl[9] + "/" + "large" + "/" + partsOfUrl[-1]
-                publishData = jsonData[0]['published_at']
-                publishTime = datetime.strptime(publishData[:19],'%Y-%m-%dT%H:%M:%S')
-                SQL = "SELECT * FROM Artstation WHERE Chatname = %s AND Artistname = %s;"
-                data = (str(chat_id), messageText)
-                cur.execute(SQL, data)
-                if cur.rowcount > 0:
-                    update.message.reply_text('You already have it')
+                if len(jsonData):
+                    partsOfUrl = jsonData[0]['cover']['small_square_url'].split("/")
+                    imageUrl = partsOfUrl[0] + "/" + partsOfUrl[1] + "/" + partsOfUrl[2] + "/" + partsOfUrl[3] + "/" + partsOfUrl[4] + "/" + partsOfUrl[5] + "/" + partsOfUrl[6] + "/" + partsOfUrl[7] + "/" + partsOfUrl[8] + "/" + partsOfUrl[9] + "/" + "large" + "/" + partsOfUrl[-1]
+                    publishData = jsonData[0]['published_at']
+                    publishTime = datetime.strptime(publishData[:19],'%Y-%m-%dT%H:%M:%S')
+                    SQL = "SELECT * FROM Artstation WHERE Chatname = %s AND Artistname = %s;"
+                    data = (str(chat_id), messageText)
+                    cur.execute(SQL, data)
+                    if cur.rowcount > 0:
+                        update.message.reply_text('You already have it')
+                    else:
+                        SQL2 = "INSERT INTO Artstation (Chatname, Artistname, Lastdate) VALUES (%s, %s, %s);" # Note: no quotes
+                        data2 = (chat_id, messageText, publishTime)
+                        cur.execute(SQL2, data2) # Note: no % operator
+                        update.message.reply_text('Added to your list!')
+                        context.bot.send_photo(chat_id=chat_id, photo=imageUrl)
+
                 else:
-                    SQL2 = "INSERT INTO Artstation (Chatname, Artistname, Lastdate) VALUES (%s, %s, %s);" # Note: no quotes
-                    data2 = (chat_id, messageText, publishTime)
-                    cur.execute(SQL2, data2) # Note: no % operator
-                    update.message.reply_text('Added to your list!')
-                    context.bot.send_photo(chat_id=chat_id, photo=imageUrl)
-
-            else:
-                update.message.reply_text("I can't take any data from artstation :(")
-        except BaseException as error:
-            print('An exception occurred in sub: {}'.format(error))
-            update.message.reply_text('Some error happen')
+                    update.message.reply_text("I can't take any data from artstation :(")
+            except BaseException as error:
+                print('An exception occurred in sub: {}'.format(error))
+                update.message.reply_text('Some error happen')
 
         cur.close()
     conn.commit()
