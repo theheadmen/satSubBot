@@ -102,7 +102,6 @@ def start(update: Update, context: CallbackContext):
     context.bot.send_photo(chat_id = chat_id, photo=open(url, 'rb'))
 
 def addSub(update: Update, context: CallbackContext):
-    cur = conn.cursor()
     chat_id = update.message.chat_id
     messageUndividedText = update.message.text.replace("/addsub", "").strip()
     if not messageUndividedText:
@@ -111,6 +110,7 @@ def addSub(update: Update, context: CallbackContext):
         messageTexts = messageUndividedText.split(", ")
         non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
         for messageText in messageTexts:
+            cur = conn.cursor()
             try:
                 url = 'https://www.artstation.com/users/' + messageText + '/projects.rss'
                 print(url)
@@ -142,8 +142,9 @@ def addSub(update: Update, context: CallbackContext):
                 print('An exception occurred in sub: {}'.format(error))
                 update.message.reply_text('Some error happen')
 
-        cur.close()
-    conn.commit()
+            cur.close()
+            conn.commit()
+            time.sleep(10 - time.time() % 10)
 
 def unsub(update: Update, context: CallbackContext):
     try:
