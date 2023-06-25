@@ -54,8 +54,8 @@ dt = datetime.now()
 
 cur = conn.cursor()
 # create table one by one
-cur.execute("DROP TABLE Artstation")
-cur.execute("CREATE TABLE Artstation(Id SERIAL PRIMARY KEY, Chatname VARCHAR(30), Artistname VARCHAR(30), Lastdate TIMESTAMP)")
+#cur.execute("DROP TABLE Artstation")
+cur.execute("CREATE TABLE IF NOT EXISTS Artstation(Id SERIAL PRIMARY KEY, Chatname VARCHAR(30), Artistname VARCHAR(30), Lastdate TIMESTAMP)")
 
 #FOR ADD SOMETHING NEW
 #SQL = "INSERT INTO Artstation (Chatname, Artistname, Lastdate) VALUES (%s, %s, %s);" # Note: no quotes
